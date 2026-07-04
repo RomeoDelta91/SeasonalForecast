@@ -1,0 +1,10 @@
+# Gedownloade SST-release (te groot voor git; komt uit de GitHub-release 'sstTemp')
+.sst_cache/
+*.part
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.streamlit/secrets.toml
