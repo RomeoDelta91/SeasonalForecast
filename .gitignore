@@ -8,3 +8,8 @@ __pycache__/
 .venv/
 venv/
 .streamlit/secrets.toml
+
+# NMME-cache (gedownload van IRI Data Library)
+.nmme_cache/
+# Gegenereerde forecast
+suriname_forecast_v3_spatial.nc
