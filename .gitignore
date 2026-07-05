@@ -1,0 +1,15 @@
+# Gedownloade SST-release (te groot voor git; komt uit de GitHub-release 'sstTemp')
+.sst_cache/
+*.part
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.streamlit/secrets.toml
+
+# NMME-cache (gedownload van IRI Data Library)
+.nmme_cache/
+# Gegenereerde forecast
+suriname_forecast_v3_spatial.nc
