@@ -12,7 +12,9 @@ worden de velden getekend met contourf (standaard 6 niveaus).
 """
 from __future__ import annotations
 
-import io
+import os
+import tempfile
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -92,7 +94,7 @@ if bron == "Genereren":
         ["Snel — geen validatie (~1 min)",
          "Standaard — nationale GROCS (enkele min.)",
          "Volledig — ruimtelijke GROCS (traag)"],
-        index=0,
+        index=1,
     )
     val_mode = {"Snel": "none", "Standaard": "national", "Volledig": "spatial"}[val_label.split(" —")[0]]
     val_step = sb.select_slider("Validatie-stap (maanden)", [3, 6, 12], value=6,
@@ -133,7 +135,14 @@ else:  # uploaden
     up = sb.file_uploader("suriname_forecast_v3_spatial.nc", type=["nc"])
     if up is not None:
         try:
-            st.session_state["forecast_ds"] = xr.open_dataset(io.BytesIO(up.read()))
+            # via een tijdelijk bestand + netCDF4-engine: lezen uit bytes zou de
+            # (niet geïnstalleerde) h5netcdf/hdf5-module vereisen
+            with tempfile.NamedTemporaryFile(suffix=".nc", delete=False) as tmp:
+                tmp.write(up.getvalue())
+                tmp_path = tmp.name
+            with xr.open_dataset(tmp_path, engine="netcdf4") as ds_up:
+                st.session_state["forecast_ds"] = ds_up.load()
+            os.unlink(tmp_path)
             sb.success("Forecast-bestand geladen.")
         except Exception as e:
             sb.error(f"Kon bestand niet lezen: {e}")
@@ -163,7 +172,10 @@ if ds is None:
 # Beschikbare voorspelmaanden
 times = pd.to_datetime(ds["time"].values)
 maand_labels = [f"{ol.MAANDEN[t.month - 1]} {t.year}" for t in times]
-available_vars = [v for v in ol.VARIABLE_SPECS if v in ds.data_vars]
+# een spec kan een afgeleide zijn (bv. terciel-kans × 100 voor %-legenda):
+# dan telt de bronvariabele in de dataset
+available_vars = [v for v, s in ol.VARIABLE_SPECS.items()
+                  if s.get("source", v) in ds.data_vars]
 
 
 # --------------------------------------------------------------------------- #
@@ -243,8 +255,11 @@ for i, var in enumerate(gekozen):
     spec = ol.VARIABLE_SPECS[var]
     with cols[i % 2]:
         default_title = f"{spec['label']} — {month_label} — {sel_naam}"
-        title = st.text_input("Titel", value=default_title, key=f"title_{var}")
-        field = ds[var].isel(time=month_idx)
+        # maand en district zitten in de key: bij een andere keuze verandert de
+        # titel automatisch mee (en blijft hij per plot aanpasbaar)
+        title = st.text_input("Titel", value=default_title,
+                              key=f"title_{var}_{month_idx}_{sel_naam}")
+        field = ds[spec.get("source", var)].isel(time=month_idx) * spec.get("scale", 1.0)
         fig, ax = plt.subplots(figsize=(7, 6))
         cf = ol.plot_field(
             ax, field, gdf, district_row, title=title, cbar_label=spec["unit"],

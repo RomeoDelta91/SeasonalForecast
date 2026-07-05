@@ -23,7 +23,10 @@ from matplotlib.ticker import MaxNLocator
 # --------------------------------------------------------------------------- #
 BASE = Path(__file__).resolve().parent
 
-RAINFALL_NC = BASE / "Suriname_monthly_rainfall_jan_1982-may_2026.nc"
+# Neerslagdata: vaste naam zodat een nieuwe maand alleen een bestandsupdate
+# vergt, geen code-aanpassing. De reeks mag op elke willekeurige maand eindigen;
+# de forecast start automatisch op de eerstvolgende maand.
+RAINFALL_NC = BASE / "data.nc"
 NINA_NC = BASE / "nina34.anom.nc"
 SHP = BASE / "DistriktenSuriname.shp"
 
@@ -105,6 +108,13 @@ VARIABLE_SPECS = {
     "prob_below": dict(label="Kans op onder-normaal", cmap="Oranges", mode="prob", unit="kans"),
     "prob_normal": dict(label="Kans op rond-normaal", cmap="Purples", mode="prob", unit="kans"),
     "prob_above": dict(label="Kans op boven-normaal", cmap="Greens", mode="prob", unit="kans"),
+    # Afgeleide varianten met de legenda in procenten (0–100 %)
+    "prob_below_pct": dict(label="% kans op onder-normaal", cmap="Oranges", mode="prob_pct",
+                           unit="%", source="prob_below", scale=100.0),
+    "prob_normal_pct": dict(label="% kans op rond-normaal", cmap="Purples", mode="prob_pct",
+                            unit="%", source="prob_normal", scale=100.0),
+    "prob_above_pct": dict(label="% kans op boven-normaal", cmap="Greens", mode="prob_pct",
+                           unit="%", source="prob_above", scale=100.0),
     "grocs": dict(label="GROCS-skill (walk-forward)", cmap="RdYlGn", mode="center05", unit="GROCS"),
     "skill_mask": dict(label="Skill-masker (1 = skill)", cmap="Greys", mode="prob", unit="1 = skill"),
 }
@@ -113,7 +123,7 @@ VARIABLE_SPECS = {
 DEFAULT_VARS = [
     "precipitation_p50", "precipitation_p10", "precipitation_p90",
     "precipitation_anomaly", "precipitation_pct_normal",
-    "prob_below", "prob_normal", "prob_above",
+    "prob_below_pct", "prob_normal_pct", "prob_above_pct",
 ]
 
 
@@ -149,6 +159,8 @@ def compute_levels(data: np.ndarray, n_levels: int, mode: str):
         return np.linspace(0, 1, n_levels + 1), "neither"
     if mode == "prob" or mode == "center05":
         return np.linspace(0, 1, n_levels + 1), "neither"
+    if mode == "prob_pct":
+        return np.linspace(0, 100, n_levels + 1), "neither"
     if mode == "center0":
         vmax = float(np.nanmax(np.abs(vals))) or 1.0
         return np.linspace(-vmax, vmax, n_levels + 1), "both"

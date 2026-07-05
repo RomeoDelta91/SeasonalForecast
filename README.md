@@ -35,13 +35,18 @@ De app is de GUI-versie van de twee notebooks:
 
 | Bestand | Inhoud |
 |---|---|
-| `Suriname_monthly_rainfall_jan_1982-may_2026.nc` | CHIRPS maandneerslag (mm), 0.05° |
+| `data.nc` | CHIRPS maandneerslag (mm), 0.05° — mag op elke maand eindigen |
 | `nina34.anom.nc` | Niño3.4-anomalie (°C) |
 | `DistriktenSuriname.shp` (+ `.dbf/.shx/.prj`) | 10 districten van Suriname |
 | `sst.mnmean.nc` | NOAA ERSST v5 — **GitHub-release `sstTemp`** (TNA/TSA-indices) |
 
 De SST wordt automatisch vanuit de release naar `.sst_cache/` gedownload (knop in de
 app) en niet in git bewaard.
+
+**Data bijwerken**: vervang `data.nc` door de nieuwste reeks (zelfde structuur,
+zelfde naam) — meer is niet nodig. De reeks mag op elke willekeurige maand eindigen;
+de app bepaalt zelf de laatste datamaand en start de forecast op de eerstvolgende
+maand (eindigt de data op mei, dan begint de verwachting in juni, enz.).
 
 ## Installeren & starten
 
